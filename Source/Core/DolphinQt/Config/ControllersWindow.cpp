@@ -180,7 +180,8 @@ void ControllersWindow::CreateWiimoteLayout()
     auto* wm_box = m_wiimote_boxes[i] = new QComboBox();
     auto* wm_button = m_wiimote_buttons[i] = new QPushButton(tr("Configure"));
 
-    for (const auto& item : {tr("None"), tr("Emulated Wii Remote"), tr("Real Wii Remote")})
+    for (const auto& item :
+         {tr("None"), tr("Emulated Wii Remote"), tr("Real Wii Remote"), tr("Vive as Wii Remote")})
       wm_box->addItem(item);
 
     int wm_row = m_wiimote_layout->rowCount();
@@ -280,7 +281,7 @@ void ControllersWindow::OnWiimoteModeChanged(bool passthrough)
 
     m_wiimote_labels[i]->setEnabled(!passthrough);
     m_wiimote_boxes[i]->setEnabled(!passthrough);
-    m_wiimote_buttons[i]->setEnabled(!passthrough && index != 0 && index != 2);
+    m_wiimote_buttons[i]->setEnabled(!passthrough && index != 0 && index != 2 && index != 3);
   }
 
   m_wiimote_refresh->setEnabled(!passthrough);
@@ -297,7 +298,7 @@ void ControllersWindow::OnWiimoteTypeChanged(int type)
     if (m_wiimote_boxes[i] == box)
     {
       const int index = box->currentIndex();
-      m_wiimote_buttons[i]->setEnabled(index != 0 && index != 2);
+      m_wiimote_buttons[i]->setEnabled(index != 0 && index != 2 && index != 3);
       return;
     }
   }
@@ -447,6 +448,8 @@ void ControllersWindow::OnWiimoteConfigure()
   switch (m_wiimote_boxes[index]->currentIndex())
   {
   case 0:  // None
+  case 3:  // Vive as Wii Remote
+    return;
   case 2:  // Real Wii Remote
     return;
   case 1:  // Emulated Wii Remote
@@ -508,7 +511,7 @@ void ControllersWindow::SaveSettings()
   {
     const int index = m_wiimote_boxes[i]->currentIndex();
     g_wiimote_sources[i] = index;
-    m_wiimote_buttons[i]->setEnabled(index != 0 && index != 2);
+    m_wiimote_buttons[i]->setEnabled(index != 0 && index != 2 && index != 3);
 
     if (Core::IsRunning())
       WiimoteReal::ChangeWiimoteSource(static_cast<u32>(i), index);

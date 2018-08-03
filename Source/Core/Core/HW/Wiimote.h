@@ -43,6 +43,7 @@ enum
   WIIMOTE_SRC_NONE = 0,
   WIIMOTE_SRC_EMU = 1,
   WIIMOTE_SRC_REAL = 2,
+  WIIMOTE_SRC_OPENVR = 3,
 };
 
 extern unsigned int g_wiimote_sources[MAX_BBMOTES];
