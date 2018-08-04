@@ -181,7 +181,7 @@ void ControllersWindow::CreateWiimoteLayout()
     auto* wm_button = m_wiimote_buttons[i] = new QPushButton(tr("Configure"));
 
     for (const auto& item :
-         {tr("None"), tr("Emulated Wii Remote"), tr("Real Wii Remote"), tr("Vive as Wii Remote")})
+         {tr("None"), tr("Emulated Wii Remote"), tr("Real Wii Remote"), tr("Emulated Wii Remote via OpenVR")})
       wm_box->addItem(item);
 
     int wm_row = m_wiimote_layout->rowCount();
@@ -448,8 +448,7 @@ void ControllersWindow::OnWiimoteConfigure()
   switch (m_wiimote_boxes[index]->currentIndex())
   {
   case 0:  // None
-  case 3:  // Vive as Wii Remote
-    return;
+  case 3:  // Emulated Wii Remote via OpenVR
   case 2:  // Real Wii Remote
     return;
   case 1:  // Emulated Wii Remote
