@@ -11,6 +11,7 @@
 #include "Core/ConfigManager.h"
 #include "Core/Core.h"
 #include "Core/HW/WiimoteEmu/WiimoteEmu.h"
+#include "Core/HW/WiimoteOpenVR/WiimoteOpenVR.h"
 #include "Core/HW/WiimoteReal/WiimoteReal.h"
 #include "Core/IOS/IOS.h"
 #include "Core/IOS/USB/Bluetooth/BTEmu.h"
@@ -85,6 +86,8 @@ void Initialize(InitializeMode init_mode)
   LoadConfig();
 
   WiimoteReal::Initialize(init_mode);
+
+  WiimoteOpenVR::Initialize();
 
   // Reload Wiimotes with our settings
   if (Movie::IsMovieActive())
@@ -164,12 +167,15 @@ bool ButtonPressed(int number)
 
   bool button_pressed = false;
 
-  if (WIIMOTE_SRC_EMU & g_wiimote_sources[number])
+  if (WIIMOTE_SRC_EMU == g_wiimote_sources[number])
     button_pressed =
         static_cast<WiimoteEmu::Wiimote*>(s_config.GetController(number))->CheckForButtonPress();
 
-  if (WIIMOTE_SRC_REAL & g_wiimote_sources[number])
+  if (WIIMOTE_SRC_REAL == g_wiimote_sources[number])
     button_pressed = WiimoteReal::CheckForButtonPress(number);
+
+  if (WIIMOTE_SRC_OPENVR == g_wiimote_sources[number])
+    INFO_LOG(WIIMOTE, "pressed?");
 
   if (g_wiimote_sources[number] && NetPlay::IsNetPlayRunning())
     button_pressed = Wiimote::NetPlay_GetButtonPress(number, button_pressed);
@@ -182,7 +188,7 @@ void Update(int number, bool connected)
 {
   if (connected)
   {
-    if (WIIMOTE_SRC_EMU & g_wiimote_sources[number])
+    if (WIIMOTE_SRC_EMU == g_wiimote_sources[number])
       static_cast<WiimoteEmu::Wiimote*>(s_config.GetController(number))->Update();
     else
       WiimoteReal::Update(number);

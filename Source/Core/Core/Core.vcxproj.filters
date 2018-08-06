@@ -166,6 +166,9 @@
     <Filter Include="HW %28Flipper/Hollywood%29\WiimoteCommon">
       <UniqueIdentifier>{ee6645da-3ad9-4fe7-809f-e4646d0b0ca5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="HW %28Flipper/Hollywood%29\Wiimote\OpenVR">
+      <UniqueIdentifier>{2d30bcd4-f42e-4f25-9c00-3e49539d7347}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BootManager.cpp" />
@@ -913,6 +916,9 @@
     <ClCompile Include="Config\WiimoteInputSettings.cpp">
       <Filter>Config</Filter>
     </ClCompile>
+    <ClCompile Include="HW\WiimoteOpenVR\WiimoteOpenVR.cpp">
+      <Filter>HW %28Flipper/Hollywood%29\Wiimote\OpenVR</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BootManager.h" />
@@ -1239,13 +1245,7 @@
     <ClInclude Include="HW\WiimoteEmu\WiimoteEmu.h">
       <Filter>HW %28Flipper/Hollywood%29\Wiimote\Emu</Filter>
     </ClInclude>
-    <ClInclude Include="HW\WiimoteEmu\WiimoteHid.h">
-      <Filter>HW %28Flipper/Hollywood%29\Wiimote\Emu</Filter>
-    </ClInclude>
     <ClInclude Include="HW\WiimoteReal\WiimoteReal.h">
-      <Filter>HW %28Flipper/Hollywood%29\Wiimote\Real</Filter>
-    </ClInclude>
-    <ClInclude Include="HW\WiimoteReal\WiimoteRealBase.h">
       <Filter>HW %28Flipper/Hollywood%29\Wiimote\Real</Filter>
     </ClInclude>
     <ClInclude Include="HW\WII_IPC.h">
@@ -1612,6 +1612,9 @@
     </ClInclude>
     <ClInclude Include="Config\WiimoteInputSettings.h">
       <Filter>Config</Filter>
+    </ClInclude>
+    <ClInclude Include="HW\WiimoteOpenVR\WiimoteOpenVR.h">
+      <Filter>HW %28Flipper/Hollywood%29\Wiimote\OpenVR</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -181,6 +181,7 @@
     <ClCompile Include="HW\WiimoteEmu\Encryption.cpp" />
     <ClCompile Include="HW\WiimoteEmu\Speaker.cpp" />
     <ClCompile Include="HW\WiimoteEmu\WiimoteEmu.cpp" />
+    <ClCompile Include="HW\WiimoteOpenVR\WiimoteOpenVR.cpp" />
     <ClCompile Include="HW\WiimoteReal\IOWin.cpp" />
     <ClCompile Include="HW\WiimoteReal\WiimoteReal.cpp" />
     <ClCompile Include="HW\WII_IPC.cpp" />
@@ -444,9 +445,8 @@
     <ClInclude Include="HW\WiimoteEmu\Encryption.h" />
     <ClInclude Include="HW\WiimoteEmu\MatrixMath.h" />
     <ClInclude Include="HW\WiimoteEmu\WiimoteEmu.h" />
-    <ClInclude Include="HW\WiimoteEmu\WiimoteHid.h" />
+    <ClInclude Include="HW\WiimoteOpenVR\WiimoteOpenVR.h" />
     <ClInclude Include="HW\WiimoteReal\WiimoteReal.h" />
-    <ClInclude Include="HW\WiimoteReal\WiimoteRealBase.h" />
     <ClInclude Include="HW\WiiSave.h" />
     <ClInclude Include="HW\WiiSaveStructs.h" />
     <ClInclude Include="HW\WII_IPC.h" />

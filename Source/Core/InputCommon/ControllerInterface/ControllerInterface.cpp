@@ -33,6 +33,9 @@
 #ifdef CIFACE_USE_PIPES
 #include "InputCommon/ControllerInterface/Pipes/Pipes.h"
 #endif
+#ifdef CIFACE_USE_OPENVR
+#include "InputCommon/ControllerInterface/OpenVR/OpenVR.h"
+#endif
 
 ControllerInterface g_controller_interface;
 
@@ -73,6 +76,9 @@ void ControllerInterface::Initialize(void* const hwnd)
 #endif
 #ifdef CIFACE_USE_PIPES
 // nothing needed
+#endif
+#ifdef CIFACE_USE_OPENVR
+  ciface::OpenVR::Init();
 #endif
 
   m_is_init = true;
@@ -115,6 +121,9 @@ void ControllerInterface::RefreshDevices()
 #endif
 #ifdef CIFACE_USE_PIPES
   ciface::Pipes::PopulateDevices();
+#endif
+#ifdef CIFACE_USE_OPENVR
+  ciface::OpenVR::PopulateDevices();
 #endif
 
   m_is_populating_devices = false;
@@ -165,6 +174,9 @@ void ControllerInterface::Shutdown()
 #endif
 #ifdef CIFACE_USE_EVDEV
   ciface::evdev::Shutdown();
+#endif
+#ifdef CIFACE_USE_OPENVR
+  ciface::OpenVR::DeInit();
 #endif
 
   m_is_init = false;

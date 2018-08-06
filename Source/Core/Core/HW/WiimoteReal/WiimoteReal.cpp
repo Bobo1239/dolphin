@@ -486,7 +486,7 @@ static unsigned int CalculateWantedWiimotes()
   // Figure out how many real Wiimotes are required
   unsigned int wanted_wiimotes = 0;
   for (unsigned int i = 0; i < MAX_WIIMOTES; ++i)
-    if (WIIMOTE_SRC_REAL & g_wiimote_sources[i] && !g_wiimotes[i])
+    if (WIIMOTE_SRC_REAL == g_wiimote_sources[i] && !g_wiimotes[i])
       ++wanted_wiimotes;
 
   return wanted_wiimotes;
@@ -496,7 +496,7 @@ static unsigned int CalculateWantedBB()
 {
   std::lock_guard<std::mutex> lk(g_wiimotes_mutex);
   unsigned int wanted_bb = 0;
-  if (WIIMOTE_SRC_REAL & g_wiimote_sources[WIIMOTE_BALANCE_BOARD] &&
+  if (WIIMOTE_SRC_REAL == g_wiimote_sources[WIIMOTE_BALANCE_BOARD] &&
       !g_wiimotes[WIIMOTE_BALANCE_BOARD])
     ++wanted_bb;
   return wanted_bb;
@@ -790,7 +790,7 @@ void ChangeWiimoteSource(unsigned int index, int source)
   Core::RunAsCPUThread([index, previous_source, source] {
     if (previous_source != WIIMOTE_SRC_NONE)
       ::Wiimote::Connect(index, false);
-    if (source & WIIMOTE_SRC_EMU)
+    if (source == WIIMOTE_SRC_EMU)
       ::Wiimote::Connect(index, true);
   });
 }
@@ -798,7 +798,7 @@ void ChangeWiimoteSource(unsigned int index, int source)
 // Called from the Wiimote scanner thread
 static bool TryToConnectWiimoteToSlot(Wiimote* wm, unsigned int i)
 {
-  if (WIIMOTE_SRC_REAL & g_wiimote_sources[i] && !g_wiimotes[i])
+  if (WIIMOTE_SRC_REAL == g_wiimote_sources[i] && !g_wiimotes[i])
   {
     if (wm->Connect(i))
     {
