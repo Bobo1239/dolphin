@@ -919,6 +919,9 @@
     <ClCompile Include="HW\WiimoteOpenVR\WiimoteOpenVR.cpp">
       <Filter>HW %28Flipper/Hollywood%29\Wiimote\OpenVR</Filter>
     </ClCompile>
+    <ClCompile Include="HW\WiimoteOpenVR\WiimoteOpenVREmu.cpp">
+      <Filter>HW %28Flipper/Hollywood%29\Wiimote\OpenVR</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="BootManager.h" />
@@ -1614,6 +1617,9 @@
       <Filter>Config</Filter>
     </ClInclude>
     <ClInclude Include="HW\WiimoteOpenVR\WiimoteOpenVR.h">
+      <Filter>HW %28Flipper/Hollywood%29\Wiimote\OpenVR</Filter>
+    </ClInclude>
+    <ClInclude Include="HW\WiimoteOpenVR\WiimoteOpenVREmu.h">
       <Filter>HW %28Flipper/Hollywood%29\Wiimote\OpenVR</Filter>
     </ClInclude>
   </ItemGroup>

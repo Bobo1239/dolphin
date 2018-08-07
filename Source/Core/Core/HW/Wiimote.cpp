@@ -71,6 +71,8 @@ void Shutdown()
   s_config.ClearControllers();
 
   WiimoteReal::Stop();
+
+  WiimoteOpenVR::Stop();
 }
 
 void Initialize(InitializeMode init_mode)
@@ -128,11 +130,13 @@ void LoadConfig()
 void Resume()
 {
   WiimoteReal::Resume();
+  WiimoteOpenVR::Resume();
 }
 
 void Pause()
 {
   WiimoteReal::Pause();
+  WiimoteOpenVR::Pause();
 }
 
 // An L2CAP packet is passed from the Core to the Wiimote on the HID CONTROL channel.
@@ -175,7 +179,7 @@ bool ButtonPressed(int number)
     button_pressed = WiimoteReal::CheckForButtonPress(number);
 
   if (WIIMOTE_SRC_OPENVR == g_wiimote_sources[number])
-    INFO_LOG(WIIMOTE, "pressed?");
+    button_pressed = WiimoteOpenVR::CheckForButtonPress(number);
 
   if (g_wiimote_sources[number] && NetPlay::IsNetPlayRunning())
     button_pressed = Wiimote::NetPlay_GetButtonPress(number, button_pressed);
@@ -189,9 +193,17 @@ void Update(int number, bool connected)
   if (connected)
   {
     if (WIIMOTE_SRC_EMU == g_wiimote_sources[number])
+    {
       static_cast<WiimoteEmu::Wiimote*>(s_config.GetController(number))->Update();
-    else
+    }
+    else if (WIIMOTE_SRC_REAL == g_wiimote_sources[number])
+    {
       WiimoteReal::Update(number);
+    }
+    else
+    {
+      WiimoteOpenVR::Update(number);
+    }
   }
   else
   {

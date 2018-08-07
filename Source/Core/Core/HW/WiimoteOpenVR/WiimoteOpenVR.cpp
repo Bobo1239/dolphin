@@ -10,4 +10,31 @@ void Initialize()
 {
   INFO_LOG(WIIMOTE, "Initialize()");
 }
+
+void Pause()
+{
+  INFO_LOG(WIIMOTE, "Pause()");
+}
+
+void Resume()
+{
+  INFO_LOG(WIIMOTE, "Resume()");
+}
+
+void Stop()
+{
+  INFO_LOG(WIIMOTE, "Stop()");
+}
+
+void Update(int wiimote_number)
+{
+  INFO_LOG(WIIMOTE, "Update()");
+}
+
+bool CheckForButtonPress(int wiimote_number)
+{
+  INFO_LOG(WIIMOTE, "CheckForButtonPress()");
+  static bool asd = false;
+  return asd = !asd;
+}
 }

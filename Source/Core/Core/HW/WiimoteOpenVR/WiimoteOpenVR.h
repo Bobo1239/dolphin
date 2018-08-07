@@ -17,4 +17,10 @@ public:
 namespace WiimoteOpenVR
 {
 void Initialize();
+void Pause();
+void Resume();
+void Stop();
+
+void Update(int wiimote_number);
+bool CheckForButtonPress(int wiimote_number);
 }
