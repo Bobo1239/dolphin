@@ -29,8 +29,6 @@
 #if defined(USE_PIPES)
 #define CIFACE_USE_PIPES
 #endif
-// TODO: Do the same as above
-#define CIFACE_USE_OPENVR
 
 //
 // ControllerInterface

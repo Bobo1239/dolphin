@@ -25,9 +25,6 @@
     <Filter Include="ControllerEmu\Setting">
       <UniqueIdentifier>{ce661cb4-f23f-4ab2-952d-402d381735e5}</UniqueIdentifier>
     </Filter>
-    <Filter Include="ControllerInterface\OpenVR">
-      <UniqueIdentifier>{21683edd-65e0-44c5-9124-2f653d5aa712}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GCAdapter.cpp" />
@@ -114,9 +111,6 @@
       <Filter>ControllerInterface</Filter>
     </ClCompile>
     <ClCompile Include="InputProfile.cpp" />
-    <ClCompile Include="ControllerInterface\OpenVR\OpenVR.cpp">
-      <Filter>ControllerInterface\OpenVR</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GCAdapter.h" />
@@ -210,9 +204,6 @@
       <Filter>ControllerInterface</Filter>
     </ClInclude>
     <ClInclude Include="InputProfile.h" />
-    <ClInclude Include="ControllerInterface\OpenVR\OpenVR.h">
-      <Filter>ControllerInterface\OpenVR</Filter>
-    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="CMakeLists.txt" />

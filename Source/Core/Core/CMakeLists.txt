@@ -143,6 +143,8 @@ add_library(core
   HW/WiimoteEmu/EmuSubroutines.cpp
   HW/WiimoteEmu/Encryption.cpp
   HW/WiimoteEmu/Speaker.cpp
+  HW/WiimoteOpenVR/WiimoteOpenVR.cpp
+  HW/WiimoteOpenVR/WiimoteOpenVREmu.cpp
   HW/WiimoteReal/WiimoteReal.cpp
   HW/WiiSave.cpp
   IOS/Device.cpp
