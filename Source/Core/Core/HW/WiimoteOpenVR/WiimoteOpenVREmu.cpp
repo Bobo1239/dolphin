@@ -30,7 +30,6 @@
 #include "Core/HW/WiimoteEmu/WiimoteEmu.h"
 #include "Core/HW/WiimoteReal/WiimoteReal.h"
 #include "Core/Movie.h"
-#include "Core/NetPlayClient.h"
 
 // Needed for compilation to succeed; TODO: do we need a comment here?
 #include "InputCommon/ControllerEmu/ControlGroup/ControlGroup.h"
@@ -468,6 +467,10 @@ void Wiimote::GetAccelData(u8* const data, const WiimoteEmu::ReportFeatures& rpt
   s16 y = (s16)(4 * (m_accel.y * ACCEL_RANGE + ACCEL_ZERO_G));
   s16 z = (s16)(4 * (m_accel.z * ACCEL_RANGE + ACCEL_ZERO_G));
 
+  x = 500;
+  y = 500;
+  z = 500;
+
   x = MathUtil::Clamp<s16>(x, 0, 1024);
   y = MathUtil::Clamp<s16>(y, 0, 1024);
   z = MathUtil::Clamp<s16>(z, 0, 1024);
@@ -641,9 +644,11 @@ void Wiimote::GetExtData(u8* const data)
 
 void Wiimote::Update()
 {
+  INFO_LOG(WIIMOTE, "Update() inner");
   // no channel == not connected i guess
   if (0 == m_reporting_channel)
     return;
+  INFO_LOG(WIIMOTE, "Update() 1");
 
   // returns true if a report was sent
   {
@@ -651,6 +656,7 @@ void Wiimote::Update()
     if (Step())
       return;
   }
+  INFO_LOG(WIIMOTE, "Update() 2");
 
   u8 data[MAX_PAYLOAD];
   memset(data, 0, sizeof(data));
@@ -661,6 +667,7 @@ void Wiimote::Update()
   // m_status.battery = (u8)(m_battery_setting->GetValue() * 100);
   m_status.battery = 95;
 
+  INFO_LOG(WIIMOTE, "Update() 3");
   const WiimoteEmu::ReportFeatures& rptf =
       reporting_mode_features[m_reporting_mode - RT_REPORT_CORE];
   s8 rptf_size = rptf.size;
@@ -695,13 +702,8 @@ void Wiimote::Update()
 
     Movie::CallWiiInputManip(data, rptf, m_index, WiimoteEmu::EXT_NONE, m_ext_key);
   }
-  if (NetPlay::IsNetPlayRunning())
-  {
-    NetPlay_GetWiimoteData(m_index, data, rptf.size, m_reporting_mode);
-    if (rptf.core)
-      m_status.buttons = *reinterpret_cast<wm_buttons*>(data + rptf.core);
-  }
 
+  INFO_LOG(WIIMOTE, "Update() 4");
   Movie::CheckWiimoteStatus(m_index, data, rptf, WiimoteEmu::EXT_NONE, m_ext_key);
 
   // don't send a data report if auto reporting is off
@@ -713,6 +715,7 @@ void Wiimote::Update()
   {
     Core::Callback_WiimoteInterruptChannel(m_index, m_reporting_channel, data, rptf_size);
   }
+  INFO_LOG(WIIMOTE, "Update() 5");
 }
 
 void Wiimote::ControlChannel(const u16 channel_id, const void* data, u32 size)
@@ -953,7 +956,8 @@ void Wiimote::HidOutputReport(const wm_report* const sr, const bool send_ack)
 
   case RT_WRITE_SPEAKER_DATA:  // 0x18
     if (WIIMOTE_SRC_EMU == g_wiimote_sources[m_index] && !m_speaker_mute)
-      Wiimote::SpeakerData(reinterpret_cast<const wm_speaker_data*>(sr->data));
+      // TODO
+      // Wiimote::SpeakerData(reinterpret_cast<const wm_speaker_data*>(sr->data));
     return;  // no ack
     break;
 
