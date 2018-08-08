@@ -4,18 +4,15 @@
 
 #pragma once
 
-namespace WiimoteOpenVR
-{
-class Wiimote
-{
-public:
-  Wiimote();
-  virtual ~Wiimote() {}
-};
-}
+#include "Core/HW/WiimoteOpenVR/WiimoteOpenVREmu.h"
+
+#include "Core/HW/Wiimote.h"
 
 namespace WiimoteOpenVR
 {
+// TODO: unique_ptr?
+extern WiimoteOpenVREmu::Wiimote* g_wiimoteas[MAX_WIIMOTES];
+
 void Initialize();
 void Pause();
 void Resume();

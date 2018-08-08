@@ -12,7 +12,6 @@
 #include "Core/HW/WiimoteCommon/WiimoteReport.h"
 #include "Core/HW/WiimoteEmu/Encryption.h"
 #include "Core/HW/WiimoteEmu/WiimoteEmu.h"
-#include "InputCommon/ControllerEmu/ControllerEmu.h"
 
 // Registry sizes
 #define WIIMOTE_EEPROM_SIZE (16 * 1024)
@@ -23,10 +22,6 @@
 
 class PointerWrap;
 
-namespace WiimoteReal
-{
-class Wiimote;
-}
 namespace WiimoteOpenVREmu
 {
 enum class WiimoteGroup
@@ -146,7 +141,7 @@ private:
   void SpeakerData(const wm_speaker_data* sd);
   bool NetPlay_GetWiimoteData(int wiimote, u8* data, u8 size, u8 reporting_mode);
 
-    // Wiimote accel data
+  // Wiimote accel data
   WiimoteEmu::AccelData m_accel;
 
   // Wiimote index, 0-3
@@ -205,7 +200,6 @@ private:
     u8 play;
     u8 unk_9;
   } m_reg_speaker;
-
 #pragma pack(pop)
 };
 }

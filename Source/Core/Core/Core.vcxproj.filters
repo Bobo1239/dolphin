@@ -537,9 +537,6 @@
     <ClCompile Include="HW\WiimoteEmu\Attachment\Turntable.cpp">
       <Filter>HW %28Flipper/Hollywood%29\Wiimote\Emu\Attachment</Filter>
     </ClCompile>
-    <ClCompile Include="HW\WiimoteEmu\EmuSubroutines.cpp">
-      <Filter>HW %28Flipper/Hollywood%29\Wiimote\Emu</Filter>
-    </ClCompile>
     <ClCompile Include="HW\WiimoteEmu\Encryption.cpp">
       <Filter>HW %28Flipper/Hollywood%29\Wiimote\Emu</Filter>
     </ClCompile>
@@ -921,6 +918,9 @@
     </ClCompile>
     <ClCompile Include="HW\WiimoteOpenVR\WiimoteOpenVREmu.cpp">
       <Filter>HW %28Flipper/Hollywood%29\Wiimote\OpenVR</Filter>
+    </ClCompile>
+    <ClCompile Include="HW\WiimoteEmu\EmuSubroutines.cpp">
+      <Filter>HW %28Flipper/Hollywood%29\Wiimote\Emu</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
