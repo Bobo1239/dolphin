@@ -432,15 +432,18 @@ Wiimote::Wiimote(const unsigned int index) : m_index(index), ir_sin(0), ir_cos(1
 
   // options
   groups.emplace_back(m_options = new ControllerEmu::ControlGroup(_trans("Options")));
-  m_options->boolean_settings.emplace_back(new ControllerEmu::BooleanSetting(
-                                               "Forward Wiimote", _trans("Forward Wii Remote"),
-                                               true, ControllerEmu::SettingType::NORMAL, true));
+  m_options->boolean_settings.emplace_back(
+      new ControllerEmu::BooleanSetting("Forward Wiimote", _trans("Forward Wii Remote"), true,
+                                        ControllerEmu::SettingType::NORMAL, true));
   m_options->boolean_settings.emplace_back(m_upright_setting = new ControllerEmu::BooleanSetting(
                                                "Upright Wiimote", _trans("Upright Wii Remote"),
                                                false, ControllerEmu::SettingType::NORMAL, true));
   m_options->boolean_settings.emplace_back(m_sideways_setting = new ControllerEmu::BooleanSetting(
                                                "Sideways Wiimote", _trans("Sideways Wii Remote"),
                                                false, ControllerEmu::SettingType::NORMAL, true));
+  m_options->boolean_settings.emplace_back(m_openvr_setting = new ControllerEmu::BooleanSetting(
+                                               "OpenVR Wiimote", _trans("OpenVR Wii Remote"), false,
+                                               ControllerEmu::SettingType::NORMAL, true));
 
   m_options->numeric_settings.emplace_back(
       std::make_unique<ControllerEmu::NumericSetting>(_trans("Speaker Pan"), 0, -127, 127));
@@ -582,6 +585,11 @@ void Wiimote::UpdateButtonsStatus()
       m_sideways_setting->GetValue() ^ sideways_modifier_toggle ^ sideways_modifier_switch;
   m_buttons->GetState(&m_status.buttons.hex, button_bitmasks);
   m_dpad->GetState(&m_status.buttons.hex, is_sideways ? dpad_sideways_bitmasks : dpad_bitmasks);
+
+  if (m_openvr_setting->GetValue())
+  {
+    Wiimote::GetOpenVRButtonData(&m_status.buttons);
+  }
 }
 
 void Wiimote::GetButtonData(u8* const data)
@@ -649,6 +657,11 @@ void Wiimote::GetAccelData(u8* const data, const ReportFeatures& rptf)
 
   wm_accel& accel = *reinterpret_cast<wm_accel*>(data + rptf.accel);
   wm_buttons& core = *reinterpret_cast<wm_buttons*>(data + rptf.core);
+
+  if (m_openvr_setting->GetValue())
+  {
+    GetOpenVRAccelData(&m_accel);
+  }
 
   // We now use 2 bits more precision, so multiply by 4 before converting to int
   s16 x = (s16)(4 * (m_accel.x * ACCEL_RANGE + ACCEL_ZERO_G));
@@ -760,6 +773,12 @@ void Wiimote::GetIRData(u8* const data, bool use_accel)
     x[i] = (u16)lround((v[i].x + 1) / 2 * (camWidth - 1));
     y[i] = (u16)lround((v[i].y + 1) / 2 * (camHeight - 1));
   }
+
+  if (m_openvr_setting->GetValue())
+  {
+    GetOpenVRIRData(x, y);
+  }
+
   // Fill report with valid data when full handshake was done
   if (m_reg_ir.data[0x30])
     // ir mode
@@ -1029,8 +1048,8 @@ void Wiimote::LoadDefaults(const ControllerInterface& ciface)
   m_buttons->SetControlExpression(0, "Click 1");  // A
   m_buttons->SetControlExpression(1, "Click 3");  // B
 #else
-  m_buttons->SetControlExpression(0, "Click 0");  // A
-  m_buttons->SetControlExpression(1, "Click 1");  // B
+  m_buttons->SetControlExpression(0, "Click 0");            // A
+  m_buttons->SetControlExpression(1, "Click 1");            // B
 #endif
   m_buttons->SetControlExpression(2, "1");  // 1
   m_buttons->SetControlExpression(3, "2");  // 2
@@ -1092,5 +1111,33 @@ bool Wiimote::HaveExtension() const
 bool Wiimote::WantExtension() const
 {
   return m_extension->switch_extension != 0;
+}
+
+void Wiimote::GetOpenVRButtonData(wm_buttons* button_data)
+{
+  // TODO
+}
+
+void Wiimote::GetOpenVRAccelData(AccelData* accel_data)
+{
+  static double asd = -0.5;
+  static double d = 0.01;
+  if (asd > 0.5)
+  {
+    d = -0.01;
+  }
+  else if (asd < -0.5)
+  {
+    d = 0.01;
+  }
+  asd += d;
+  accel_data->x = asd;
+  accel_data->y = asd;
+  // accel_data->z = asd;
+  // INFO_LOG(WIIMOTE, "x %f", asd);
+}
+
+void Wiimote::GetOpenVRIRData(u16* x, u16* y)
+{
 }
 }  // namespace WiimoteEmu

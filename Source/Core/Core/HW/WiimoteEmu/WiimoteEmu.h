@@ -259,6 +259,10 @@ protected:
   void GetIRData(u8* data, bool use_accel);
   void GetExtData(u8* data);
 
+  void GetOpenVRButtonData(wm_buttons* button_data);
+  void GetOpenVRAccelData(AccelData *accel_data);
+  void GetOpenVRIRData(u16* x, u16* y);
+
   bool HaveExtension() const;
   bool WantExtension() const;
 
@@ -298,6 +302,7 @@ private:
   ControllerEmu::ControlGroup* m_options;
   ControllerEmu::BooleanSetting* m_sideways_setting;
   ControllerEmu::BooleanSetting* m_upright_setting;
+  ControllerEmu::BooleanSetting* m_openvr_setting;
   ControllerEmu::NumericSetting* m_battery_setting;
   ControllerEmu::ModifySettingsButton* m_hotkeys;
 
