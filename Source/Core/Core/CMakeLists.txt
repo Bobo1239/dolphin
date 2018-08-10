@@ -294,6 +294,7 @@ PUBLIC
   videonull
   videoogl
   videosoftware
+  openvr_api
 
 PRIVATE
   bdisasm

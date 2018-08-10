@@ -537,6 +537,7 @@ endif()
 add_subdirectory(Externals/Bochs_disasm)
 add_subdirectory(Externals/cpp-optparse)
 add_subdirectory(Externals/glslang)
+add_subdirectory(Externals/openvr)
 
 find_package(pugixml)
 if(NOT pugixml_FOUND)

@@ -86,6 +86,8 @@ void Initialize(InitializeMode init_mode)
 
   WiimoteReal::Initialize(init_mode);
 
+  WiimoteEmu::InitializeOpenVR();
+
   // Reload Wiimotes with our settings
   if (Movie::IsMovieActive())
     Movie::ChangeWiiPads();

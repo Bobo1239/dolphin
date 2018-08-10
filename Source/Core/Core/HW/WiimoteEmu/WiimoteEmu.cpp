@@ -45,6 +45,8 @@
 #include "InputCommon/ControllerEmu/Setting/BooleanSetting.h"
 #include "InputCommon/ControllerEmu/Setting/NumericSetting.h"
 
+#include <openvr.h>
+
 namespace
 {
 // :)
@@ -1111,6 +1113,19 @@ bool Wiimote::HaveExtension() const
 bool Wiimote::WantExtension() const
 {
   return m_extension->switch_extension != 0;
+}
+
+void InitializeOpenVR()
+{
+  using namespace vr;
+  IVRSystem* vr_pointer = nullptr;
+  EVRInitError eError = VRInitError_None;
+  vr_pointer = VR_Init(&eError, VRApplication_Background);
+  if (eError != VRInitError_None)
+  {
+    printf("Unable to init VR runtime: %s \n", VR_GetVRInitErrorAsEnglishDescription(eError));
+    exit(0);
+  }
 }
 
 void Wiimote::GetOpenVRButtonData(wm_buttons* button_data)

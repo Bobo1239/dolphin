@@ -42,6 +42,8 @@ class Wiimote;
 }
 namespace WiimoteEmu
 {
+void InitializeOpenVR();
+
 enum class WiimoteGroup
 {
   Buttons,
