@@ -1188,7 +1188,7 @@ void Wiimote::GetOpenVRAccelData(AccelData* accel_data)
   using namespace vr;
   VRControllerState_t controller_state;
   TrackedDevicePose_t pose;
-  g_vr->GetControllerStateWithPose(ETrackingUniverseOrigin::TrackingUniverseRawAndUncalibrated, 1, &controller_state, sizeof(VRControllerState_t), &pose);
+  g_vr->GetControllerStateWithPose(ETrackingUniverseOrigin::TrackingUniverseStanding, 1, &controller_state, sizeof(VRControllerState_t), &pose);
 
   Eigen::Matrix4f m;
   for (int i = 0; i < 3; ++i) {
