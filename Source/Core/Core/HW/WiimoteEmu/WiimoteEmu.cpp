@@ -1195,7 +1195,7 @@ void Wiimote::GetOpenVRAccelData(AccelData* accel_data)
   // w = 0 as this is a vector
   glm::vec4 v_world(VectorVRToGlm(pose_world.vVelocity), 0);
   glm::mat4x4 device_to_world = MatrixVRToGlm(pose_world.mDeviceToAbsoluteTracking);
-  glm::mat4x4 inv = glm::inverse(device_to_world);
+  glm::mat4x4 inv = glm::affineInverse(device_to_world);
   glm::vec4 v_controller = inv * v_world;
 
   std::chrono::duration<float> delta = now - last_now;
