@@ -13,6 +13,11 @@
 #include "Core/HW/WiimoteEmu/Encryption.h"
 #include "InputCommon/ControllerEmu/ControllerEmu.h"
 
+#undef sign
+#include "Eigen/Geometry"
+#include "openvr.h"
+#define sign(x) ((x) ? (x) < 0 ? -1 : 1 : 0)
+
 // Registry sizes
 #define WIIMOTE_EEPROM_SIZE (16 * 1024)
 #define WIIMOTE_EEPROM_FREE_SIZE 0x1700
@@ -34,7 +39,7 @@ class ModifySettingsButton;
 class NumericSetting;
 class Output;
 class Tilt;
-}
+}  // namespace ControllerEmu
 
 namespace WiimoteReal
 {
@@ -262,7 +267,7 @@ protected:
   void GetExtData(u8* data);
 
   void GetOpenVRButtonData(wm_buttons* button_data);
-  void GetOpenVRAccelData(AccelData *accel_data);
+  void GetOpenVRAccelData(AccelData* accel_data);
   void GetOpenVRIRData(u16* x, u16* y);
 
   bool HaveExtension() const;
@@ -284,6 +289,11 @@ private:
   void SendReadDataReply(ReadRequest& request);
   void SpeakerData(const wm_speaker_data* sd);
   bool NetPlay_GetWiimoteData(int wiimote, u8* data, u8 size, u8 reporting_mode);
+
+  vr::HmdVector3_t VectorEigenToVR(Eigen::Vector3f v_eigen);
+  Eigen::Vector3f VectorVRToEigen(vr::HmdVector3_t v_vr);
+  vr::HmdMatrix34_t MatrixEigenToVR(Eigen::Affine3f m_eigen);
+  Eigen::Affine3f MatrixVRToEigen(vr::HmdMatrix34_t m_vr);
 
   // control groups
   ControllerEmu::Buttons* m_buttons;
@@ -384,4 +394,4 @@ private:
 
 #pragma pack(pop)
 };
-}
+}  // namespace WiimoteEmu

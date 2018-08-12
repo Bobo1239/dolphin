@@ -2,12 +2,6 @@
 // Licensed under GPLv2+
 // Refer to the license.txt file included.
 
-// At the top as Eigen defines a `sign` macro which we want to overwrite
-#include <Eigen/Dense>
-#include <openvr.h>
-#include <chrono>
-#include <iostream>
-
 #include "Core/HW/WiimoteEmu/WiimoteEmu.h"
 
 #include <algorithm>
@@ -538,7 +532,8 @@ ControllerEmu::ControlGroup* Wiimote::GetTurntableGroup(TurntableGroup group)
 bool Wiimote::Step()
 {
   m_motor->control_ref->State(m_rumble_on);
-  if (m_rumble_on) {
+  if (m_rumble_on)
+  {
     g_vr->TriggerHapticPulse(1, 0, 3999);
   }
 
@@ -1153,8 +1148,7 @@ void Wiimote::GetOpenVRButtonData(wm_buttons* button_data)
     button_data->b = 1;
   }
 
-  if (controller_state.ulButtonPressed &
-      ButtonMaskFromId(EVRButtonId::k_EButton_SteamVR_Touchpad))
+  if (controller_state.ulButtonPressed & ButtonMaskFromId(EVRButtonId::k_EButton_SteamVR_Touchpad))
   {
     float x = controller_state.rAxis[0].x;
     float y = controller_state.rAxis[0].y;
@@ -1186,89 +1180,94 @@ void Wiimote::GetOpenVRButtonData(wm_buttons* button_data)
 void Wiimote::GetOpenVRAccelData(AccelData* accel_data)
 {
   using namespace vr;
-  VRControllerState_t controller_state;
-  TrackedDevicePose_t pose;
-  g_vr->GetControllerStateWithPose(ETrackingUniverseOrigin::TrackingUniverseStanding, 1, &controller_state, sizeof(VRControllerState_t), &pose);
+  using namespace Eigen;
 
-  Eigen::Matrix4f m;
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 4; ++j) {
-      m(i, j) = pose.mDeviceToAbsoluteTracking.m[i][j];
-    }
-  }
-  m(3, 0) = 0;
-  m(3, 1) = 0;
-  m(3, 2) = 0;
-  m(3, 3) = 1;
-
-  Eigen::Matrix4f inv = m.inverse();
-  HmdMatrix34_t inv_openvr;
-
-  for (int i = 0; i < 3; ++i) {
-    for (int j = 0; j < 4; ++j) {
-      inv_openvr.m[i][j] = inv(i, j);
-    }
-  }
-
-  Eigen::Vector4f gravity(0, -9.81, 0, 0);
-  gravity = inv * gravity;
-
-  TrackedDevicePose_t device_pose;
-  g_vr->ApplyTransform(&device_pose, &pose, &inv_openvr);
-  // printf("%+4.1f\t%+4.1f\t%+4.1f\t\t%+4.1f\t%+4.1f\t%+4.1f\n", pose.vVelocity.v[0], pose.vVelocity.v[1], pose.vVelocity.v[2], device_pose.vVelocity.v[0], device_pose.vVelocity.v[1], device_pose.vVelocity.v[2]);
-  static float last_v[3];
-  #define AVERAGE 10
-  static float last_a[AVERAGE][3];
+  static Vector3f last_v;
   static auto last_now = std::chrono::high_resolution_clock::now();
+
+  VRControllerState_t controller_state;
+  TrackedDevicePose_t pose_world;
+  g_vr->GetControllerStateWithPose(ETrackingUniverseOrigin::TrackingUniverseStanding, 1,
+                                   &controller_state, sizeof(VRControllerState_t), &pose_world);
   auto now = std::chrono::high_resolution_clock::now();
-  std::chrono::duration<double> diff = now - last_now;
 
-  // std::cout << "diff: " << diff.count() << " ms\n";
+  Vector3f v_world = VectorVRToEigen(pose_world.vVelocity);
+  Affine3f device_to_world = MatrixVRToEigen(pose_world.mDeviceToAbsoluteTracking);
+  Affine3f inv = device_to_world.inverse();
+  HmdMatrix34_t inv_openvr = MatrixEigenToVR(inv);
+
+  TrackedDevicePose_t pose_controller;
+  g_vr->ApplyTransform(&pose_controller, &pose_world, &inv_openvr);
+
+  // OpenVR's transform includes a scaling component which is non-constant
+  // Scale to the pre-transformation magnitude again
+  Vector3f v_controller = VectorVRToEigen(pose_controller.vVelocity);
+  v_controller.normalize();
+  v_controller *= v_world.norm();
+
+  std::chrono::duration<float> delta = now - last_now;
+  Vector3f a = (v_controller - last_v) / delta.count();
+
   last_now = now;
+  last_v = v_controller;
 
-  double a[3];
+  // printf("%6.1f  %6.1f  %6.1f  |  %6.1f  %6.1f  %6.1f  |  %6.1f  %6.1f  %6.1f\n", v_world(0),
+  //        v_world(1), v_world(2), v_controller(0), v_controller(1), v_controller(2), a(0), a(1),
+  //        a(2));
 
-  for (int i = 0; i < 3; i++) {
-    // a[i] = 0;
-    a[i] = (device_pose.vVelocity.v[i] - last_v[i]) / diff.count();
-  }
-  for (int i = 0; i < 3; i++) {
-    last_v[i] = device_pose.vVelocity.v[i];
-    for (int j = AVERAGE - 1; j > 0; j--) {
-      for (int k = 0; k < 3; k++) {
-        last_a[j][k] = last_a[j - 1][k];
-      }
-    }
-    for (int k = 0; k < 3; k++) {
-      last_a[0][k] = a[k];
-    }
-  }
-
-  double final[3];
-
-  for (int k = 0; k < 3; k++) {
-    double x = 0;
-    for (int i = 0; i < AVERAGE; ++i)
-    {
-      x += last_a[i][k];
-    }
-    final[k] = x / (double) AVERAGE;
-  }
-
-  printf("%6.1f\t%6.1f\t%6.1f\n", a[0], a[1], a[2]);
-
+  Vector3f gravity(0, -9.81, 0);
+  gravity = inv * gravity;
 
   //    | openvr | wiimote
   // ---------------------
   // +x | right  |  left
   // +y | up     |  back
   // +z | back   |  up
-  accel_data->x= -(final[0] + gravity(0)) / 9.81;
-  accel_data->y= (final[2] + gravity(2)) / 9.81;
-  accel_data->z= (final[1] + gravity(1)) / 9.81;
+  accel_data->x = -(a(0) + gravity(0)) / 9.81;
+  accel_data->y = (a(2) + gravity(2)) / 9.81;
+  accel_data->z = (a(1) + gravity(1)) / 9.81;
 }
 
 void Wiimote::GetOpenVRIRData(u16* x, u16* y)
 {
+  // static const int camWidth = 1024;
+  // static const int camHeight = 768;
+}
+
+vr::HmdVector3_t Wiimote::VectorEigenToVR(Eigen::Vector3f eigen)
+{
+  return {.v = {eigen(0), eigen(1), eigen(2)}};
+}
+
+Eigen::Vector3f Wiimote::VectorVRToEigen(vr::HmdVector3_t v_vr)
+{
+  Eigen::Vector3f v(v_vr.v[0], v_vr.v[1], v_vr.v[2]);
+  return v;
+}
+
+vr::HmdMatrix34_t Wiimote::MatrixEigenToVR(Eigen::Affine3f m_eigen)
+{
+  vr::HmdMatrix34_t m_vr;
+  for (int i = 0; i < 3; ++i)
+  {
+    for (int j = 0; j < 4; ++j)
+    {
+      m_vr.m[i][j] = m_eigen(i, j);
+    }
+  }
+  return m_vr;
+}
+
+Eigen::Affine3f Wiimote::MatrixVRToEigen(vr::HmdMatrix34_t m_vr)
+{
+  Eigen::Affine3f m_eigen;
+  for (int i = 0; i < 3; ++i)
+  {
+    for (int j = 0; j < 4; ++j)
+    {
+      m_eigen(i, j) = m_vr.m[i][j];
+    }
+  }
+  return m_eigen;
 }
 }  // namespace WiimoteEmu
