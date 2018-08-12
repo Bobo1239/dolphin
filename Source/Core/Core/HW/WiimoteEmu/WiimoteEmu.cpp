@@ -1194,16 +1194,8 @@ void Wiimote::GetOpenVRAccelData(AccelData* accel_data)
   Vector3f v_world = VectorVRToEigen(pose_world.vVelocity);
   Affine3f device_to_world = MatrixVRToEigen(pose_world.mDeviceToAbsoluteTracking);
   Affine3f inv = device_to_world.inverse();
-  HmdMatrix34_t inv_openvr = MatrixEigenToVR(inv);
-
-  TrackedDevicePose_t pose_controller;
-  g_vr->ApplyTransform(&pose_controller, &pose_world, &inv_openvr);
-
-  // OpenVR's transform includes a scaling component which is non-constant
-  // Scale to the pre-transformation magnitude again
-  Vector3f v_controller = VectorVRToEigen(pose_controller.vVelocity);
-  v_controller.normalize();
-  v_controller *= v_world.norm();
+  // inv.linear() as we're transforming a vector and not a point!
+  Vector3f v_controller = inv.linear() * v_world;
 
   std::chrono::duration<float> delta = now - last_now;
   Vector3f a = (v_controller - last_v) / delta.count();
