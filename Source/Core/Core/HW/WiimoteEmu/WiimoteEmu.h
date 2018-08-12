@@ -14,9 +14,8 @@
 #include "InputCommon/ControllerEmu/ControllerEmu.h"
 
 #undef sign
-#include "Eigen/Geometry"
+#include "glm/glm.hpp"
 #include "openvr.h"
-#define sign(x) ((x) ? (x) < 0 ? -1 : 1 : 0)
 
 // Registry sizes
 #define WIIMOTE_EEPROM_SIZE (16 * 1024)
@@ -290,10 +289,10 @@ private:
   void SpeakerData(const wm_speaker_data* sd);
   bool NetPlay_GetWiimoteData(int wiimote, u8* data, u8 size, u8 reporting_mode);
 
-  vr::HmdVector3_t VectorEigenToVR(Eigen::Vector3f v_eigen);
-  Eigen::Vector3f VectorVRToEigen(vr::HmdVector3_t v_vr);
-  vr::HmdMatrix34_t MatrixEigenToVR(Eigen::Affine3f m_eigen);
-  Eigen::Affine3f MatrixVRToEigen(vr::HmdMatrix34_t m_vr);
+  vr::HmdVector3_t VectorGlmToVR(glm::vec3 v_glm);
+  glm::vec3 VectorVRToGlm(vr::HmdVector3_t v_vr);
+  vr::HmdMatrix34_t MatrixGlmToVR(glm::mat4x4 m_glm);
+  glm::mat4x4 MatrixVRToGlm(vr::HmdMatrix34_t m_vr);
 
   // control groups
   ControllerEmu::Buttons* m_buttons;

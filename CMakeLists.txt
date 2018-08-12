@@ -538,7 +538,7 @@ add_subdirectory(Externals/Bochs_disasm)
 add_subdirectory(Externals/cpp-optparse)
 add_subdirectory(Externals/glslang)
 add_subdirectory(Externals/openvr)
-include_directories(SYSTEM "Externals/Eigen")
+include_directories(SYSTEM "Externals/glm")
 
 find_package(pugixml)
 if(NOT pugixml_FOUND)

@@ -45,6 +45,8 @@
 #include "InputCommon/ControllerEmu/Setting/BooleanSetting.h"
 #include "InputCommon/ControllerEmu/Setting/NumericSetting.h"
 
+#include <glm/gtc/matrix_inverse.hpp>
+
 namespace
 {
 // :)
@@ -1180,9 +1182,8 @@ void Wiimote::GetOpenVRButtonData(wm_buttons* button_data)
 void Wiimote::GetOpenVRAccelData(AccelData* accel_data)
 {
   using namespace vr;
-  using namespace Eigen;
 
-  static Vector3f last_v;
+  static glm::vec4 last_v;
   static auto last_now = std::chrono::high_resolution_clock::now();
 
   VRControllerState_t controller_state;
@@ -1191,23 +1192,23 @@ void Wiimote::GetOpenVRAccelData(AccelData* accel_data)
                                    &controller_state, sizeof(VRControllerState_t), &pose_world);
   auto now = std::chrono::high_resolution_clock::now();
 
-  Vector3f v_world = VectorVRToEigen(pose_world.vVelocity);
-  Affine3f device_to_world = MatrixVRToEigen(pose_world.mDeviceToAbsoluteTracking);
-  Affine3f inv = device_to_world.inverse();
-  // inv.linear() as we're transforming a vector and not a point!
-  Vector3f v_controller = inv.linear() * v_world;
+  // w = 0 as this is a vector
+  glm::vec4 v_world(VectorVRToGlm(pose_world.vVelocity), 0);
+  glm::mat4x4 device_to_world = MatrixVRToGlm(pose_world.mDeviceToAbsoluteTracking);
+  glm::mat4x4 inv = glm::inverse(device_to_world);
+  glm::vec4 v_controller = inv * v_world;
 
   std::chrono::duration<float> delta = now - last_now;
-  Vector3f a = (v_controller - last_v) / delta.count();
+  glm::vec4 a = (v_controller - last_v) / delta.count();
 
   last_now = now;
   last_v = v_controller;
 
   // printf("%6.1f  %6.1f  %6.1f  |  %6.1f  %6.1f  %6.1f  |  %6.1f  %6.1f  %6.1f\n", v_world(0),
-  //        v_world(1), v_world(2), v_controller(0), v_controller(1), v_controller(2), a(0), a(1),
-  //        a(2));
+  //        v_world[1], v_world[2], v_controller[0], v_controller[1], v_controller[2], a[0], a[1],
+  //        a[2]);
 
-  Vector3f gravity(0, -9.81, 0);
+  glm::vec4 gravity(0, -9.81, 0, 0);
   gravity = inv * gravity;
 
   //    | openvr | wiimote
@@ -1215,9 +1216,9 @@ void Wiimote::GetOpenVRAccelData(AccelData* accel_data)
   // +x | right  |  left
   // +y | up     |  back
   // +z | back   |  up
-  accel_data->x = -(a(0) + gravity(0)) / 9.81;
-  accel_data->y = (a(2) + gravity(2)) / 9.81;
-  accel_data->z = (a(1) + gravity(1)) / 9.81;
+  accel_data->x = -(a[0] + gravity[0]) / 9.81;
+  accel_data->y = +(a[2] + gravity[2]) / 9.81;
+  accel_data->z = +(a[1] + gravity[1]) / 9.81;
 }
 
 void Wiimote::GetOpenVRIRData(u16* x, u16* y)
@@ -1226,40 +1227,45 @@ void Wiimote::GetOpenVRIRData(u16* x, u16* y)
   // static const int camHeight = 768;
 }
 
-vr::HmdVector3_t Wiimote::VectorEigenToVR(Eigen::Vector3f eigen)
+vr::HmdVector3_t Wiimote::VectorGlmToVR(glm::vec3 v_glm)
 {
-  return {.v = {eigen(0), eigen(1), eigen(2)}};
+  return {.v = {v_glm[0], v_glm[1], v_glm[2]}};
 }
 
-Eigen::Vector3f Wiimote::VectorVRToEigen(vr::HmdVector3_t v_vr)
+glm::vec3 Wiimote::VectorVRToGlm(vr::HmdVector3_t v_vr)
 {
-  Eigen::Vector3f v(v_vr.v[0], v_vr.v[1], v_vr.v[2]);
-  return v;
+  return glm::vec3(v_vr.v[0], v_vr.v[1], v_vr.v[2]);
 }
 
-vr::HmdMatrix34_t Wiimote::MatrixEigenToVR(Eigen::Affine3f m_eigen)
+vr::HmdMatrix34_t Wiimote::MatrixGlmToVR(glm::mat4x4 m_glm)
 {
   vr::HmdMatrix34_t m_vr;
   for (int i = 0; i < 3; ++i)
   {
     for (int j = 0; j < 4; ++j)
     {
-      m_vr.m[i][j] = m_eigen(i, j);
+      // glm is column-major
+      m_vr.m[i][j] = m_glm[j][i];
     }
   }
   return m_vr;
 }
 
-Eigen::Affine3f Wiimote::MatrixVRToEigen(vr::HmdMatrix34_t m_vr)
+glm::mat4x4 Wiimote::MatrixVRToGlm(vr::HmdMatrix34_t m_vr)
 {
-  Eigen::Affine3f m_eigen;
+  glm::mat3x4 m_glm;
   for (int i = 0; i < 3; ++i)
   {
     for (int j = 0; j < 4; ++j)
     {
-      m_eigen(i, j) = m_vr.m[i][j];
+      // glm is column-major
+      m_glm[j][i] = m_vr.m[i][j];
     }
   }
-  return m_eigen;
+  m_glm[0][3] = 0;
+  m_glm[1][3] = 0;
+  m_glm[2][3] = 0;
+  m_glm[3][3] = 1;
+  return m_glm;
 }
 }  // namespace WiimoteEmu
