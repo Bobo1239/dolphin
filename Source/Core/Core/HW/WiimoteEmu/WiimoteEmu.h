@@ -294,6 +294,8 @@ private:
   vr::HmdMatrix34_t MatrixGlmToVR(glm::mat4x4 m_glm);
   glm::mat4x4 MatrixVRToGlm(vr::HmdMatrix34_t m_vr);
 
+  vr::IOBufferHandle_t m_vr_imu_buffer_handle;
+
   // control groups
   ControllerEmu::Buttons* m_buttons;
   ControllerEmu::Buttons* m_dpad;

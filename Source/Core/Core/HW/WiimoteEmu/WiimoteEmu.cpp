@@ -56,7 +56,7 @@ auto const PI = TAU / 2.0;
 
 namespace WiimoteEmu
 {
-vr::IVRSystem* g_vr;
+vr::IVRSystem* g_vr = nullptr;
 
 // clang-format off
 static const u8 eeprom_data_0[] = {
@@ -469,6 +469,29 @@ Wiimote::Wiimote(const unsigned int index) : m_index(index), ir_sin(0), ir_cos(1
 
   // --- reset eeprom/register/values to default ---
   Reset();
+
+  if (!g_vr)
+  {
+    InitializeOpenVR();
+  }
+
+  printf("Querying controller 1 info...\n");
+  vr::ETrackedPropertyError property_error;
+  char serial_number_c[20] = {0};
+  if (!g_vr->GetStringTrackedDeviceProperty(1, vr::ETrackedDeviceProperty::Prop_SerialNumber_String,
+                                            serial_number_c, sizeof(serial_number_c),
+                                            &property_error))
+  {
+    printf("%s\n", g_vr->GetPropErrorNameFromEnum(property_error));
+    exit(1);
+  }
+  std::string serial_number(serial_number_c);
+  std::string path = "/devices/lighthouse/" + serial_number + "/imu";
+  vr::VRIOBuffer()->Open(path.c_str(), vr::IOBufferMode_Read, sizeof(vr::ImuSample_t), 0,
+                         &m_vr_imu_buffer_handle);
+
+  /* when you’re done */
+  // vr::VRIOBuffer()->Close( ulIMUStream );
 }
 
 std::string Wiimote::GetName() const
@@ -1124,12 +1147,24 @@ bool Wiimote::WantExtension() const
 void InitializeOpenVR()
 {
   using namespace vr;
+
+  if (g_vr)
+  {
+    return;
+  }
+
+  printf("Initializing OpenVR...\n");
   EVRInitError eError = VRInitError_None;
   g_vr = VR_Init(&eError, VRApplication_Background);
   if (eError != VRInitError_None)
   {
     printf("Unable to init VR runtime: %s \n", VR_GetVRInitErrorAsEnglishDescription(eError));
-    exit(0);
+    exit(1);
+  }
+  if (!g_vr->IsTrackedDeviceConnected(1))
+  {
+    printf("No controller found!\n");
+    exit(1);
   }
 }
 
@@ -1183,42 +1218,28 @@ void Wiimote::GetOpenVRAccelData(AccelData* accel_data)
 {
   using namespace vr;
 
-  static glm::vec4 last_v;
-  static auto last_now = std::chrono::high_resolution_clock::now();
+  ImuSample_t imu_sample;
+  uint32_t n_read;
 
-  VRControllerState_t controller_state;
-  TrackedDevicePose_t pose_world;
-  g_vr->GetControllerStateWithPose(ETrackingUniverseOrigin::TrackingUniverseStanding, 1,
-                                   &controller_state, sizeof(VRControllerState_t), &pose_world);
-  auto now = std::chrono::high_resolution_clock::now();
+  // Calibration is not handled here as my controller doesn't have that information.
+  if (VRIOBuffer()->Read(m_vr_imu_buffer_handle, &imu_sample, sizeof(imu_sample), &n_read) !=
+          IOBuffer_Success ||
+      n_read <= 0)
+  {
+    printf("IMU read failed\n");
+  }
 
-  // w = 0 as this is a vector
-  glm::vec4 v_world(VectorVRToGlm(pose_world.vVelocity), 0);
-  glm::mat4x4 device_to_world = MatrixVRToGlm(pose_world.mDeviceToAbsoluteTracking);
-  glm::mat4x4 inv = glm::affineInverse(device_to_world);
-  glm::vec4 v_controller = inv * v_world;
+  printf("%6.1f  %6.1f  %6.1fz\n", imu_sample.vAccel.v[0], imu_sample.vAccel.v[1],
+         imu_sample.vAccel.v[2]);
 
-  std::chrono::duration<float> delta = now - last_now;
-  glm::vec4 a = (v_controller - last_v) / delta.count();
-
-  last_now = now;
-  last_v = v_controller;
-
-  // printf("%6.1f  %6.1f  %6.1f  |  %6.1f  %6.1f  %6.1f  |  %6.1f  %6.1f  %6.1f\n", v_world(0),
-  //        v_world[1], v_world[2], v_controller[0], v_controller[1], v_controller[2], a[0], a[1],
-  //        a[2]);
-
-  glm::vec4 gravity(0, -9.81, 0, 0);
-  gravity = inv * gravity;
-
-  //    | openvr | wiimote
-  // ---------------------
-  // +x | right  |  left
-  // +y | up     |  back
-  // +z | back   |  up
-  accel_data->x = -(a[0] + gravity[0]) / 9.81;
-  accel_data->y = +(a[2] + gravity[2]) / 9.81;
-  accel_data->z = +(a[1] + gravity[1]) / 9.81;
+  //    | openvr | imu | wiimote
+  // ---------------------------
+  // +x | right  | right |  left
+  // +y | up     | back  |  back
+  // +z | back   | up    |  up
+  accel_data->x = -imu_sample.vAccel.v[0] / 9.81;
+  accel_data->y = +imu_sample.vAccel.v[1] / 9.81;
+  accel_data->z = +imu_sample.vAccel.v[2] / 9.81;
 }
 
 void Wiimote::GetOpenVRIRData(u16* x, u16* y)
