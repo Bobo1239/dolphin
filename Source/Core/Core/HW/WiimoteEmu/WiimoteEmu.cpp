@@ -479,9 +479,9 @@ Wiimote::Wiimote(const unsigned int index) : m_index(index), ir_sin(0), ir_cos(1
   printf("Querying controller 1 info...\n");
   vr::ETrackedPropertyError property_error;
   char serial_number_c[20] = {0};
-  if (!g_vr->GetStringTrackedDeviceProperty(1, vr::ETrackedDeviceProperty::Prop_SerialNumber_String,
-                                            serial_number_c, sizeof(serial_number_c),
-                                            &property_error))
+  if (!g_vr->GetStringTrackedDeviceProperty(
+          m_openvr_index, vr::ETrackedDeviceProperty::Prop_SerialNumber_String, serial_number_c,
+          sizeof(serial_number_c), &property_error))
   {
     printf("%s\n", g_vr->GetPropErrorNameFromEnum(property_error));
     exit(1);
@@ -1080,8 +1080,8 @@ void Wiimote::LoadDefaults(const ControllerInterface& ciface)
   m_buttons->SetControlExpression(0, "Click 1");  // A
   m_buttons->SetControlExpression(1, "Click 3");  // B
 #else
-  m_buttons->SetControlExpression(0, "Click 0");            // A
-  m_buttons->SetControlExpression(1, "Click 1");            // B
+  m_buttons->SetControlExpression(0, "Click 0");  // A
+  m_buttons->SetControlExpression(1, "Click 1");  // B
 #endif
   m_buttons->SetControlExpression(2, "1");  // 1
   m_buttons->SetControlExpression(3, "2");  // 2
@@ -1162,7 +1162,7 @@ void InitializeOpenVR()
     printf("Unable to init VR runtime: %s \n", VR_GetVRInitErrorAsEnglishDescription(eError));
     exit(1);
   }
-  if (!g_vr->IsTrackedDeviceConnected(1))
+  if (!g_vr->IsTrackedDeviceConnected(m_openvr_index))
   {
     printf("No controller found!\n");
     exit(1);
@@ -1174,7 +1174,7 @@ void Wiimote::GetOpenVRButtonData(wm_buttons* button_data)
   using namespace vr;
 
   VRControllerState_t controller_state;
-  g_vr->GetControllerState(1, &controller_state, sizeof(VRControllerState_t));
+  g_vr->GetControllerState(m_openvr_index, &controller_state, sizeof(VRControllerState_t));
 
   if (controller_state.rAxis[1].x > 0.9)
   {
@@ -1249,15 +1249,15 @@ void Wiimote::GetOpenVRIRData(u16* x, u16* y)
 
   // left right left2 right2
   // output: in pixel coordinates
-  const float distance = 0.2;
-  const float distance_multiplier = 1.2;
-  const float height = 1.0;
+  const float distance = 0.2f;
+  const float distance_multiplier = 1.2f;
+  const float height = 1.0f;
 
   const int camWidth = 1024;
   const int camHeight = 768;
   // Field of view in radians
-  const float fovX = 33 / 360 * 2 * PI;
-  const float fovY = camHeight / camWidth * fovX;
+  const float fovX = 33.f / 360.f * 2.f * (float)PI * 3.f; // Multiply FOV by 3 as it doesn't feel right without this...
+  const float fovY = (float)camHeight / (float)camWidth * fovX;
 
   const float x1 = distance / 2;
   const float x2 = distance_multiplier * distance / 2;
@@ -1270,27 +1270,29 @@ void Wiimote::GetOpenVRIRData(u16* x, u16* y)
 
   VRControllerState_t controller_state;
   TrackedDevicePose_t pose_world;
-  g_vr->GetControllerStateWithPose(ETrackingUniverseOrigin::TrackingUniverseStanding, 1,
-                                   &controller_state, sizeof(VRControllerState_t), &pose_world);
+  g_vr->GetControllerStateWithPose(ETrackingUniverseOrigin::TrackingUniverseStanding,
+                                   m_openvr_index, &controller_state, sizeof(VRControllerState_t),
+                                   &pose_world);
   glm::mat4x4 device_to_world = MatrixVRToGlm(pose_world.mDeviceToAbsoluteTracking);
   glm::mat4x4 world_to_device = glm::affineInverse(device_to_world);
-  glm::mat4x4 perspective = glm::perspective(fovY, fovX / fovY, 0.1f, 100.0f);
+  glm::mat4x4 perspective =
+      glm::perspective(fovY, (float)camWidth / (float)camHeight, 0.1f, 100.0f);
 
-  for (auto p : points)
+  for (int i = 0; i < 4; ++i)
   {
-    p = perspective * world_to_device * p;
+    points[i] = perspective * world_to_device * points[i];
   }
 
   for (int i = 0; i < 4; ++i)
   {
-    x[i] = points[i].x;
-    y[i] = points[i].y;
+    x[i] = camWidth - (points[i].x * (float)(camWidth / 2) + (float)(camWidth / 2));
+    y[i] = camHeight -(points[i].y * (float)(camHeight / 2) + (float)(camHeight / 2));
   }
 }
 
 vr::HmdVector3_t Wiimote::VectorGlmToVR(glm::vec3 v_glm)
 {
-  return {.v = {v_glm[0], v_glm[1], v_glm[2]}};
+  return {v_glm[0], v_glm[1], v_glm[2]};
 }
 
 glm::vec3 Wiimote::VectorVRToGlm(vr::HmdVector3_t v_vr)
@@ -1314,7 +1316,7 @@ vr::HmdMatrix34_t Wiimote::MatrixGlmToVR(glm::mat4x4 m_glm)
 
 glm::mat4x4 Wiimote::MatrixVRToGlm(vr::HmdMatrix34_t m_vr)
 {
-  glm::mat3x4 m_glm;
+  glm::mat4x4 m_glm;
   for (int i = 0; i < 3; ++i)
   {
     for (int j = 0; j < 4; ++j)

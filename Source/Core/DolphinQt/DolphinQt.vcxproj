@@ -49,6 +49,9 @@
     <Manifest>
       <AdditionalManifestFiles>DolphinQt.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
     </Manifest>
+    <PostBuildEvent>
+      <Command Condition="'$(Platform)'=='x64'">copy /Y "$(ExternalsDir)openvr\bin\win64\*.dll" "$(SolutionDir)..\Binary\$(Platform)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <!--
   MOC files need to be listed. Put headers here ONLY if they use Q_OBJECT. Otherwise, put them

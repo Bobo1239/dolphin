@@ -295,6 +295,7 @@ private:
   glm::mat4x4 MatrixVRToGlm(vr::HmdMatrix34_t m_vr);
 
   vr::IOBufferHandle_t m_vr_imu_buffer_handle;
+  vr::TrackedDeviceIndex_t m_openvr_index = 3;
 
   // control groups
   ControllerEmu::Buttons* m_buttons;
