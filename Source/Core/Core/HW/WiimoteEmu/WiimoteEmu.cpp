@@ -46,6 +46,7 @@
 #include "InputCommon/ControllerEmu/Setting/NumericSetting.h"
 
 #include <glm/gtc/matrix_inverse.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 namespace
 {
@@ -1244,8 +1245,47 @@ void Wiimote::GetOpenVRAccelData(AccelData* accel_data)
 
 void Wiimote::GetOpenVRIRData(u16* x, u16* y)
 {
-  // static const int camWidth = 1024;
-  // static const int camHeight = 768;
+  using namespace vr;
+
+  // left right left2 right2
+  // output: in pixel coordinates
+  const float distance = 0.2;
+  const float distance_multiplier = 1.2;
+  const float height = 1.0;
+
+  const int camWidth = 1024;
+  const int camHeight = 768;
+  // Field of view in radians
+  const float fovX = 33 / 360 * 2 * PI;
+  const float fovY = camHeight / camWidth * fovX;
+
+  const float x1 = distance / 2;
+  const float x2 = distance_multiplier * distance / 2;
+
+  glm::vec4 points[4];
+  points[0] = glm::vec4(+x1, height, 0, 1);
+  points[1] = glm::vec4(-x1, height, 0, 1);
+  points[2] = glm::vec4(+x2, height, 0, 1);
+  points[3] = glm::vec4(-x2, height, 0, 1);
+
+  VRControllerState_t controller_state;
+  TrackedDevicePose_t pose_world;
+  g_vr->GetControllerStateWithPose(ETrackingUniverseOrigin::TrackingUniverseStanding, 1,
+                                   &controller_state, sizeof(VRControllerState_t), &pose_world);
+  glm::mat4x4 device_to_world = MatrixVRToGlm(pose_world.mDeviceToAbsoluteTracking);
+  glm::mat4x4 world_to_device = glm::affineInverse(device_to_world);
+  glm::mat4x4 perspective = glm::perspective(fovY, fovX / fovY, 0.1f, 100.0f);
+
+  for (auto p : points)
+  {
+    p = perspective * world_to_device * p;
+  }
+
+  for (int i = 0; i < 4; ++i)
+  {
+    x[i] = points[i].x;
+    y[i] = points[i].y;
+  }
 }
 
 vr::HmdVector3_t Wiimote::VectorGlmToVR(glm::vec3 v_glm)
