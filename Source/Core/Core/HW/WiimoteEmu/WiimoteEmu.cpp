@@ -1162,11 +1162,6 @@ void InitializeOpenVR()
     printf("Unable to init VR runtime: %s \n", VR_GetVRInitErrorAsEnglishDescription(eError));
     exit(1);
   }
-  if (!g_vr->IsTrackedDeviceConnected(m_openvr_index))
-  {
-    printf("No controller found!\n");
-    exit(1);
-  }
 }
 
 void Wiimote::GetOpenVRButtonData(wm_buttons* button_data)
